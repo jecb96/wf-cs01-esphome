@@ -1,0 +1,143 @@
+substitutions:
+  cover_verbose_name: "Etersky Cover"
+  cover_id: etersky_dev_cover
+  open_duration: 20s
+  close_duration: 20s
+  interlock_wait: 1500ms
+  button_delay: 100ms
+
+esphome:
+  platform: ESP8266
+  board: esp01_1m
+
+switch:
+  - platform: gpio
+    pin: GPIO13
+    id: relay_open
+    name: "Relay Open"
+    internal: true
+    restore_mode: always off
+    interlock: &relay_interlock [relay_open, relay_close]
+    interlock_wait_time: ${interlock_wait}
+    on_turn_on:
+      then:
+        - switch.turn_on: led_open
+    on_turn_off:
+      then:
+        - switch.turn_off: led_open
+  - platform: gpio
+    pin: GPIO15
+    id: relay_close
+    name: "Relay Close"
+    internal: true
+    restore_mode: always off
+    interlock: *relay_interlock
+    interlock_wait_time: ${interlock_wait}
+    on_turn_on:
+      then:
+        - switch.turn_on: led_close
+    on_turn_off:
+      then:
+        - switch.turn_off: led_close
+  - platform: gpio
+    pin: GPIO16
+    id: led_open
+    name: "LED Open"
+    restore_mode: always off
+    interlock: &led_interlock [led_open, led_close, led_stop]
+    internal: true
+  - platform: gpio
+    pin: GPIO2
+    id: led_close
+    name: "LED Close"
+    restore_mode: always off
+    interlock: *led_interlock
+    internal: true
+  - platform: gpio
+    pin: GPIO14
+    id: led_stop
+    name: "LED Stop"
+    restore_mode: always off
+    interlock: *led_interlock
+    internal: true
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: GPIO12
+      inverted: True
+      mode: INPUT_PULLUP
+    id: button_open
+    name: "Button Open"
+    filters:
+      - delayed_on_off: ${button_delay}
+    on_press:
+      then:
+        - if:
+            condition:
+              switch.is_off: relay_open
+            then:
+              - cover.open: ${cover_id}
+            else:
+              - cover.stop: ${cover_id}
+  - platform: gpio
+    pin:
+      number: GPIO5
+      inverted: True
+      mode: INPUT_PULLUP
+    id: button_close
+    name: "Button Close"
+    filters:
+      - delayed_on_off: ${button_delay}
+    on_press:
+      then:
+        - if:
+            condition:
+              switch.is_off: relay_close
+            then:
+              - cover.close: ${cover_id}
+            else:
+              - cover.stop: ${cover_id}
+  - platform: gpio
+    pin:
+      number: GPIO3
+      inverted: True
+      mode: INPUT_PULLUP
+    id: button_stop
+    name: "Button Stop"
+    filters:
+      - delayed_on_off: ${button_delay}
+
+
+cover:
+  - platform: time_based
+    id: ${cover_id}
+    name: ${cover_verbose_name}
+    open_action:
+      - switch.turn_on: relay_open
+    open_duration: ${open_duration}
+    close_action:
+      - switch.turn_on: relay_close
+    close_duration: ${close_duration}
+    stop_action:
+      - switch.turn_off: relay_open
+      - switch.turn_off: relay_close
+      - switch.turn_on: led_stop
+      - delay: 2s
+      - switch.turn_off: led_stop
+    has_built_in_endstop: False
+
+output:
+  - platform: gpio
+    pin: GPIO1
+    id: output_backlight
+
+light:
+  - platform: binary
+    name: "Switch Backlight"
+    id: switch_backlight
+    output: output_backlight
+    restore_mode: always off
+
+status_led:
+  pin: GPIO0

@@ -1,0 +1,38 @@
+# TODO: Change the settings to fit your cover
+substitutions:
+  cover_verbose_name: "Curtain Living Room" # The human friendly name of your cover
+  cover_id: curtain_living_room_0 # the internal id (must be unique)
+  open_duration: 29s # the time the cover needs to fully open
+  close_duration: 27s # the time the cover needs to fully close
+
+# Use this line to import the template
+packages:
+  wfsc01: !include common/device_wf_sc_01.yaml
+
+
+
+# TODO: Add the rest of your normal config here e.g.
+# TODO: Do not add a board base etc.! as this is configured via the package
+
+#esphome:
+  #name: "Living Room Switch"
+
+# Enable logging
+# logger:
+
+# # Enable Home Assistant API
+# api:
+
+# ota:
+#   password: "<SUPERSECRET>"
+
+# wifi:
+#   ssid: "<YOUR SSID>"
+#   password: "<YOUR PASSWORD>"
+
+#   # Enable fallback hotspot (captive portal) in case wifi connection fails
+#   ap:
+#     ssid: "WF_SC_01 Fallback Hotspot"
+#     password: "<SUPERSECRET>"
+
+# captive_portal:
